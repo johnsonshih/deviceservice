@@ -1,0 +1,2 @@
+curl -d '{"Name":"Johnson"}' -H 'Content-Type: application/json' -X POST http://192.168.7.207:8080/api/v1/helloworld&&printf "\n"
+curl -d '{"Name":""}' -H 'Content-Type: application/json' -X POST http://192.168.7.207:8080/queryDevice&&printf "\n"

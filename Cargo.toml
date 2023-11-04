@@ -1,0 +1,20 @@
+[package]
+name = "deviceservice"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[[bin]]
+name = "deviceservice"
+path = "main.rs"
+
+[dependencies]
+env_logger = "0.10.0"
+hyper = "0.13.6"
+log = "0.4"
+reqwest = { version = "0.10.6", features = [ "blocking" ]}
+serde = "1.0.104"
+serde_derive = "1.0.104"
+serde_json = "1.0.45"
+tokio = { version = "0.2", features = [ "full" ]}

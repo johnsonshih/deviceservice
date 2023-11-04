@@ -1,0 +1,1 @@
+docker build -t deviceservice:v1 -f Dockerfile .
