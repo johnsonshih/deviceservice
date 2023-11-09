@@ -1,5 +1,7 @@
+use crate::crontab::{create_crontab, find_crontab, update_crontab, CronTabSpec};
+use hyper::server::Server;
 use hyper::service::{make_service_fn, service_fn};
-use hyper::{Body, Method, Request, Response, Server, StatusCode};
+use hyper::{Body, Method, Request, Response, StatusCode};
 use log::{debug, error, info};
 use std::collections::HashMap;
 use std::net::SocketAddr;
@@ -23,8 +25,8 @@ async fn postquerydevicewebservice(req: Request<Body>) -> Result<Response<Body>,
     } else {
         ""
     };
-    let response = handle_device_query(protocol_name, device_id);
-    info!("presponse={response}");
+    let response = handle_device_query(protocol_name, device_id).await;
+    info!("response={response}");
     Ok(Response::new(Body::from(response)))
 }
 
@@ -34,7 +36,7 @@ struct QueryDeviceResponseBody {
     pub properties: HashMap<String, String>,
 }
 
-fn handle_device_query(protocol_name: &str, device_id: &str) -> String {
+async fn handle_device_query(protocol_name: &str, device_id: &str) -> String {
     info!("handle_device_query: protocol_name={protocol_name}, device_id={device_id}");
     let query_body = match protocol_name {
         "debugEcho" => {
@@ -43,9 +45,9 @@ fn handle_device_query(protocol_name: &str, device_id: &str) -> String {
             } else if device_id.starts_with("provision-bad") {
                 get_reject_response(protocol_name, device_id)
             } else if device_id.starts_with("newcr-no-instance") {
-                get_newcr_no_instance_response(protocol_name, device_id)
+                get_newcr_no_instance_response(protocol_name, device_id).await
             } else if device_id.starts_with("newcr-with-instance") {
-                get_newcr_with_instance_response(protocol_name, device_id)
+                get_newcr_with_instance_response(protocol_name, device_id).await
             } else {
                 get_accept_response(protocol_name, device_id)
             }
@@ -60,28 +62,49 @@ fn get_provision_good_response(protocol_name: &str, device_id: &str) -> QueryDev
         result: "accept".to_string(),
         properties: HashMap::from([
             (
-                "combined-id".to_string(),
+                "COMBINED_ID".to_string(),
                 format!("{}-{}", protocol_name, device_id),
             ),
             (
-                "extra-info".to_string(),
+                "EXTRA_INFO".to_string(),
                 format!("extra-info-{}", device_id),
             ),
         ]),
     }
 }
 
-fn get_newcr_no_instance_response(protocol_name: &str, device_id: &str) -> QueryDeviceResponseBody {
-    // TODO: create custom resource
-    get_reject_response(protocol_name, device_id)
-}
-
-fn get_newcr_with_instance_response(
+async fn get_newcr_no_instance_response(
     protocol_name: &str,
     device_id: &str,
 ) -> QueryDeviceResponseBody {
-    // TODO: create custom resource
-    get_accept_response(protocol_name, device_id)
+    let namespace = "newcr-no-instance";
+
+    let crontab_spec = CronTabSpec {
+        cron_spec: "* * */3".to_string(),
+        image: "newcr-no-instance_cron_image".to_string(),
+        capacity: 1,
+    };
+
+    let _result = try_create_crontab(&crontab_spec, &device_id.to_lowercase(), namespace).await;
+    get_reject_response(protocol_name, device_id)
+}
+
+async fn get_newcr_with_instance_response(
+    protocol_name: &str,
+    device_id: &str,
+) -> QueryDeviceResponseBody {
+    let namespace = "newcr-with-instance";
+
+    let crontab_spec = CronTabSpec {
+        cron_spec: "* * * */4".to_string(),
+        image: "newcr-with-instance_cron_image".to_string(),
+        capacity: 1,
+    };
+
+    match try_create_crontab(&crontab_spec, &device_id.to_lowercase(), namespace).await {
+        Ok(()) => get_accept_response(protocol_name, device_id),
+        Err(_) => get_reject_response(protocol_name, device_id),
+    }
 }
 
 fn get_reject_response(_protocol_name: &str, _device_id: &str) -> QueryDeviceResponseBody {
@@ -95,6 +118,41 @@ fn get_accept_response(_protocol_name: &str, _device_id: &str) -> QueryDeviceRes
     QueryDeviceResponseBody {
         result: "accept".to_string(),
         properties: HashMap::new(),
+    }
+}
+
+async fn try_create_crontab(
+    crontab_spec: &CronTabSpec,
+    name: &str,
+    namespace: &str,
+) -> Result<(), anyhow::Error> {
+    let api_client = kube::Client::try_default().await.unwrap();
+    match find_crontab(name, namespace, &api_client).await {
+        Ok(mut crontab_object) => {
+            // Crontab already exists
+            crontab_object.spec.capacity += 1;
+            match update_crontab(&crontab_object.spec, name, namespace, &api_client).await {
+                Ok(()) => {
+                    info!(
+                        "try_create_crontab - updated CrobTab {:?}",
+                        crontab_object.spec
+                    );
+                    Ok(())
+                }
+                Err(e) => {
+                    info!(
+                        "try_create_crontab - call to update_crontab returned with error {} ",
+                        e
+                    );
+                    Err(e)
+                }
+            }
+        }
+        Err(_) => {
+            // Crobtab does not exist
+            // TODO: distinguish the errors due to fail to connect to API server
+            create_crontab(crontab_spec, name, namespace, &api_client).await
+        }
     }
 }
 

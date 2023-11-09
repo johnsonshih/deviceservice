@@ -1,0 +1,14 @@
+---
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: newcr-no-instance
+  labels:
+    name: newcr-no-instance
+---
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: newcr-with-instance
+  labels:
+    name: newcr-with-instance

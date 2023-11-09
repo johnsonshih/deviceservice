@@ -10,11 +10,16 @@ name = "deviceservice"
 path = "main.rs"
 
 [dependencies]
+anyhow = "1.0.38"
 env_logger = "0.10.0"
-hyper = "0.13.6"
+hyper = "0.14.5"
+k8s-openapi = { version = "0.17.0", default-features = false, features = ["schemars", "v1_23"] }
+kube = { version = "0.80.0",  features = ["derive"] }
 log = "0.4"
 reqwest = { version = "0.10.6", features = [ "blocking" ]}
-serde = "1.0.104"
-serde_derive = "1.0.104"
-serde_json = "1.0.45"
-tokio = { version = "0.2", features = [ "full" ]}
+schemars = "0.8.0"
+serde = "1.0"
+serde_derive = "1.0"
+serde_json = "1.0"
+tokio = { version = "1.0.1", features = [ "full" ]}
+tonic = "0.5.2"
