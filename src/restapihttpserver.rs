@@ -30,6 +30,71 @@ async fn postquerydevicewebservice(req: Request<Body>) -> Result<Response<Body>,
     Ok(Response::new(Body::from(response)))
 }
 
+async fn post_query_device_credential(req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
+    let whole_body_in_bytes = hyper::body::to_bytes(req.into_body()).await?;
+    let body_string = std::str::from_utf8(&whole_body_in_bytes).unwrap();
+    debug!("body_string: {body_string}");
+    let json_data: serde_json::Value = serde_json::from_str(body_string).unwrap_or_default();
+    let protocol_name = if json_data["protocol"].is_string() {
+        json_data["protocol"].as_str().unwrap()
+    } else {
+        ""
+    };
+
+    let query_data = &json_data["data"];
+    let device_id = if query_data["id"].is_string() {
+        query_data["id"].as_str().unwrap()
+    } else {
+        ""
+    };
+    let response = handle_query_device_credential(protocol_name, device_id).await;
+    info!("response={response}");
+    Ok(Response::new(Body::from(response)))
+}
+
+#[derive(Serialize, Debug, Default)]
+struct QueryDeviceCredentialResponseBody {
+    pub result: String,
+    pub credential_type: String,
+    pub credentials: HashMap<String, String>,
+}
+
+async fn handle_query_device_credential(protocol_name: &str, device_id: &str) -> String {
+    info!("handle_query_device_credential: protocol_name={protocol_name}, device_id={device_id}");
+    let query_body = match protocol_name {
+        "debugEcho" => {
+            if device_id == "foo0" {
+                QueryDeviceCredentialResponseBody {
+                    result: "success".to_string(),
+                    credential_type: "username-password".to_string(),
+                    credentials: HashMap::from([
+                        (
+                            "username".to_string(),
+                            "debugEchoUser1".to_string(),
+                        ),
+                        (
+                            "password".to_string(),
+                            "debugEchoPassword1".to_string(),
+                        ),
+                    ]),
+                }
+            } else {
+                QueryDeviceCredentialResponseBody {
+                    result: "fail".to_string(),
+                    ..Default::default()
+                }
+            }
+        }
+        _ => {
+            QueryDeviceCredentialResponseBody {
+                result: "fail".to_string(),
+                ..Default::default()
+            }
+        }
+    };
+    serde_json::to_string(&query_body).unwrap_or(String::from("{}"))
+}
+
 #[derive(Serialize, Debug)]
 struct QueryDeviceResponseBody {
     pub result: String,
@@ -168,6 +233,7 @@ async fn webservicerouter(req: Request<Body>) -> Result<Response<Body>, hyper::E
     match (req.method(), req.uri().path()) {
         (&Method::GET, "/api/v1/helloworld") => gethelloworldwebservice(req).await,
         (&Method::POST, "/queryDevice") => postquerydevicewebservice(req).await,
+        (&Method::POST, "/queryDeviceCredential") => post_query_device_credential(req).await,
         _ => statusnotfoundwebservice(req).await,
     }
 }
