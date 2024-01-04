@@ -68,14 +68,8 @@ async fn handle_query_device_credential(protocol_name: &str, device_id: &str) ->
                     result: "success".to_string(),
                     credential_type: "username-password".to_string(),
                     credentials: HashMap::from([
-                        (
-                            "username".to_string(),
-                            "debugEchoUser1".to_string(),
-                        ),
-                        (
-                            "password".to_string(),
-                            "debugEchoPassword1".to_string(),
-                        ),
+                        ("username".to_string(), "debugEchoUser1".to_string()),
+                        ("password".to_string(), "debugEchoPassword1".to_string()),
                     ]),
                 }
             } else {
@@ -85,12 +79,29 @@ async fn handle_query_device_credential(protocol_name: &str, device_id: &str) ->
                 }
             }
         }
-        _ => {
-            QueryDeviceCredentialResponseBody {
-                result: "fail".to_string(),
-                ..Default::default()
+        "onvif" => {
+            let credential = get_credential_for_onvif_device(device_id);
+            if let Some((username, password)) = credential {
+                let mut credentials = HashMap::from([("username".to_string(), username)]);
+                if let Some(password) = password {
+                    credentials.insert("password".to_string(), password);
+                }
+                QueryDeviceCredentialResponseBody {
+                    result: "success".to_string(),
+                    credential_type: "username-password".to_string(),
+                    credentials,
+                }
+            } else {
+                QueryDeviceCredentialResponseBody {
+                    result: "fail".to_string(),
+                    ..Default::default()
+                }
             }
         }
+        _ => QueryDeviceCredentialResponseBody {
+            result: "fail".to_string(),
+            ..Default::default()
+        },
     };
     serde_json::to_string(&query_body).unwrap_or(String::from("{}"))
 }
@@ -219,6 +230,50 @@ async fn try_create_crontab(
             create_crontab(crontab_spec, name, namespace, &api_client).await
         }
     }
+}
+
+fn get_credential_for_onvif_device(device_id: &str) -> Option<(String, Option<String>)> {
+    let extension_service_config_directory = std::env::var("ONVIF_SECRET_DIRECTORY");
+    // If no env var, return None
+    if extension_service_config_directory.is_err() {
+        return None;
+    }
+    // If the directory doesn't exist, return None
+    let extension_service_config_directory = extension_service_config_directory.unwrap();
+    let dir_iter = std::fs::read_dir(&extension_service_config_directory);
+    if dir_iter.is_err() {
+        return None;
+    }
+
+    // convert uuid string format to C_IDENTIFIER format by replacing "-" with "_"
+    let file_prefix = device_id.replace('-', "_");
+    let file_path = std::path::Path::new(&extension_service_config_directory);
+
+    let file_to_open = file_path.join(format!("{0}_username", file_prefix));
+    info!("username file to open is {:?}", file_to_open);
+    if !file_to_open.exists() {
+        return None;
+    }
+    let username = std::fs::read_to_string(file_to_open).unwrap_or_default();
+    if username.is_empty() {
+        return None;
+    }
+    info!("username = {}", username);
+
+    let file_to_open = file_path.join(format!("{0}_password", file_prefix));
+    info!("password file to open is {:?}", file_to_open);
+    let password = if !file_to_open.exists() {
+        None
+    } else {
+        let content = std::fs::read_to_string(file_to_open);
+        if content.is_err() {
+            None
+        } else {
+            Some(content.unwrap())
+        }
+    };
+    info!("password = {:?}", password);
+    Some((username, password))
 }
 
 async fn statusnotfoundwebservice(_req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
