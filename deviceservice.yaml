@@ -51,7 +51,7 @@ spec:
     spec:
       serviceAccountName: 'deviceservice-sa'
       containers:
-      - image: ghcr.io/johnsonshih/deviceservice:v1
+      - image: ghcr.io/johnsonshih/deviceservice:v2
         imagePullPolicy: Always
         name: deviceservice
         resources: {}
