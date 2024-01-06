@@ -30,26 +30,16 @@ async fn postquerydevicewebservice(req: Request<Body>) -> Result<Response<Body>,
     Ok(Response::new(Body::from(response)))
 }
 
-async fn post_query_device_credential(req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
-    let whole_body_in_bytes = hyper::body::to_bytes(req.into_body()).await?;
-    let body_string = std::str::from_utf8(&whole_body_in_bytes).unwrap();
-    debug!("body_string: {body_string}");
-    let json_data: serde_json::Value = serde_json::from_str(body_string).unwrap_or_default();
-    let protocol_name = if json_data["protocol"].is_string() {
-        json_data["protocol"].as_str().unwrap()
-    } else {
-        ""
-    };
+#[derive(Clone, Debug, Default, Deserialize)]
+pub struct QueryDeviceCredentialRequestBody {
+    pub protocol: String,
+    pub data: QueryDeviceCredentialInput,
+}
 
-    let query_data = &json_data["data"];
-    let device_id = if query_data["id"].is_string() {
-        query_data["id"].as_str().unwrap()
-    } else {
-        ""
-    };
-    let response = handle_query_device_credential(protocol_name, device_id).await;
-    info!("response={response}");
-    Ok(Response::new(Body::from(response)))
+#[derive(Clone, Debug, Default, Deserialize)]
+pub struct QueryDeviceCredentialInput {
+    pub id: String,
+    pub properties: HashMap<String, String>,
 }
 
 #[derive(Serialize, Debug, Default)]
@@ -57,6 +47,17 @@ struct QueryDeviceCredentialResponseBody {
     pub result: String,
     pub credential_type: String,
     pub credentials: HashMap<String, String>,
+}
+
+async fn post_query_device_credential(req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
+    let whole_body_in_bytes = hyper::body::to_bytes(req.into_body()).await?;
+    let body_string = std::str::from_utf8(&whole_body_in_bytes).unwrap();
+    debug!("body_string: {body_string}");
+    let request =
+        serde_json::from_str::<QueryDeviceCredentialRequestBody>(body_string).unwrap_or_default();
+    let response = handle_query_device_credential(&request.protocol, &request.data.id).await;
+    info!("response={response}");
+    Ok(Response::new(Body::from(response)))
 }
 
 async fn handle_query_device_credential(protocol_name: &str, device_id: &str) -> String {
