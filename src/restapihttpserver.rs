@@ -134,6 +134,119 @@ async fn handle_device_query(protocol_name: &str, device_id: &str) -> String {
     serde_json::to_string(&query_body).unwrap_or(String::from("{}"))
 }
 
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct Device {
+    pub id: String,
+    /// Properties that identify the device. These are stored in the device's instance
+    /// and set as environment variables in the device's broker Pods. May be information
+    /// about where to find the device such as an RTSP URL or a device node (e.g. `/dev/video1`)
+    pub properties: ::std::collections::HashMap<String, String>,
+    /// Optionally specify mounts for Pods that request this device as a resource
+    pub mounts: Vec<Mount>,
+    /// Optionally specify device information to be mounted for Pods that request this device as a resource
+    pub device_specs: Vec<DeviceSpec>,
+}
+
+/// From Device Plugin  API
+/// Mount specifies a host volume to mount into a container.
+/// where device library or tools are installed on host and container
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct Mount {
+    /// Path of the mount within the container.
+    pub container_path: String,
+    /// Path of the mount on the host.
+    pub host_path: String,
+    /// If set, the mount is read-only.
+    pub read_only: bool,
+}
+
+/// From Device Plugin API
+/// DeviceSpec specifies a host device to mount into a container.
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct DeviceSpec {
+    /// Path of the device within the container.
+    pub container_path: String,
+    /// Path of the device on the host.
+    pub host_path: String,
+    /// Cgroups permissions of the device, candidates are one or more of
+    /// * r - allows container to read from the specified device.
+    /// * w - allows container to write to the specified device.
+    /// * m - allows container to create device files that do not yet exist.
+    pub permissions: String,
+}
+
+#[derive(Clone, Debug, Default, Deserialize)]
+pub struct DeviceChangeRequestBody {
+    pub protocol: String,
+    pub data: DeviceChangeInput,
+}
+
+#[derive(Clone, Debug, Default, Deserialize)]
+pub struct DeviceChangeInput {
+    pub reason: String,
+    pub device: Device,
+}
+
+#[derive(Debug, Default, Serialize)]
+struct DeviceChangeResponseBody {
+    pub result: String,
+    pub device: Device,
+}
+
+async fn post_device_change(req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
+    let whole_body_in_bytes = hyper::body::to_bytes(req.into_body()).await?;
+    let body_string = std::str::from_utf8(&whole_body_in_bytes).unwrap();
+    debug!("body_string: {body_string}");
+    let request = serde_json::from_str::<DeviceChangeRequestBody>(body_string).unwrap_or_default();
+    info!("device change request = {:?}", request);
+    let response = handle_device_change(&request.protocol, &request.data.reason, &request.data.device).await;
+    info!("response={response}");
+    Ok(Response::new(Body::from(response)))
+}
+
+async fn handle_device_change(protocol_name: &str, reason: &str, device: &Device) -> String {
+    info!(
+        "handle_device_change: protocol_name={}, reason = {}, device_data={:?}",
+        protocol_name, reason, device
+    );
+    let query_body = match protocol_name {
+        "onvif" => handle_onvif_device_change(reason, device).await,
+        _ => DeviceChangeResponseBody {
+            result: "fail".to_string(),
+            ..Default::default()
+        },
+    };
+    serde_json::to_string(&query_body).unwrap_or(String::from("{}"))
+}
+
+async fn handle_onvif_device_change(reason: &str, device: &Device) -> DeviceChangeResponseBody {
+    if reason == "add" {
+        let namespace = "newcr-with-instance";
+
+        let crontab_spec = CronTabSpec {
+            cron_spec: "* * * */4".to_string(),
+            image: "newcr-with-instance_cron_image".to_string(),
+            capacity: 1,
+        };
+
+        match try_create_crontab(&crontab_spec, &device.id.to_lowercase(), namespace).await {
+            Ok(()) => DeviceChangeResponseBody {
+                result: "success".to_string(),
+                device: device.clone(),
+            },
+            Err(_) => DeviceChangeResponseBody {
+                result: "fail".to_string(),
+                ..Default::default()
+            },
+        }
+    } else {
+        DeviceChangeResponseBody {
+            result: "fail".to_string(),
+            ..Default::default()
+        }
+    }
+}
+
 fn get_provision_good_response(protocol_name: &str, device_id: &str) -> QueryDeviceResponseBody {
     QueryDeviceResponseBody {
         result: "accept".to_string(),
@@ -290,6 +403,7 @@ async fn webservicerouter(req: Request<Body>) -> Result<Response<Body>, hyper::E
         (&Method::GET, "/api/v1/helloworld") => gethelloworldwebservice(req).await,
         (&Method::POST, "/queryDevice") => postquerydevicewebservice(req).await,
         (&Method::POST, "/queryDeviceCredential") => post_query_device_credential(req).await,
+        (&Method::POST, "/deviceChange") => post_device_change(req).await,
         _ => statusnotfoundwebservice(req).await,
     }
 }

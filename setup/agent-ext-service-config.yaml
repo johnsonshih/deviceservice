@@ -4,3 +4,4 @@ metadata:
   name: akri-agent-extension-service-configs
 data:
   queryDeviceCredential.onvif: "http://deviceservice:8080/queryDeviceCredential"
+  deviceChange.onvif: "http://deviceservice:8080/deviceChange"

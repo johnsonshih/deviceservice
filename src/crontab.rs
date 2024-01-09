@@ -94,7 +94,7 @@ pub async fn create_crontab(
 
     let mut crontab = CronTab::new(name, crontab_to_create.clone());
     crontab.metadata = ObjectMeta {
-        name: Some(name.to_string()),
+        name: Some(name.to_string().replace([':', '/', '_'], "-")),
         ..Default::default()
     };
     match crontabs_client
