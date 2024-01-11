@@ -1,4 +1,9 @@
+use crate::adrasset::{create_asset, find_asset, AssetSpec, DataPoint};
 use crate::crontab::{create_crontab, find_crontab, update_crontab, CronTabSpec};
+use blake2::{
+    digest::{Update, VariableOutput},
+    VarBlake2b,
+};
 use hyper::server::Server;
 use hyper::service::{make_service_fn, service_fn};
 use hyper::{Body, Method, Request, Response, StatusCode};
@@ -199,7 +204,12 @@ async fn post_device_change(req: Request<Body>) -> Result<Response<Body>, hyper:
     debug!("body_string: {body_string}");
     let request = serde_json::from_str::<DeviceChangeRequestBody>(body_string).unwrap_or_default();
     info!("device change request = {:?}", request);
-    let response = handle_device_change(&request.protocol, &request.data.reason, &request.data.device).await;
+    let response = handle_device_change(
+        &request.protocol,
+        &request.data.reason,
+        &request.data.device,
+    )
+    .await;
     info!("response={response}");
     Ok(Response::new(Body::from(response)))
 }
@@ -221,15 +231,41 @@ async fn handle_device_change(protocol_name: &str, reason: &str, device: &Device
 
 async fn handle_onvif_device_change(reason: &str, device: &Device) -> DeviceChangeResponseBody {
     if reason == "add" {
-        let namespace = "newcr-with-instance";
-
-        let crontab_spec = CronTabSpec {
-            cron_spec: "* * * */4".to_string(),
-            image: "newcr-with-instance_cron_image".to_string(),
-            capacity: 1,
+        let namespace = "azure-iot-operations";
+        let data_point = DataPoint {
+            name: "data point name".to_string(),
+            data_source: "ns=3;s=FastUInt100".to_string(),
+            capability_id: "capability id".to_string(),
+            observability_mode: "none".to_string(),
+            data_point_configuration: "{}".to_string(),
+        };
+        let data_points = vec![data_point];
+        let asset_spec = AssetSpec {
+            uuid: "".to_string(),
+            asset_type: "".to_string(),
+            enabled: false,
+            external_asset_id: "".to_string(),
+            display_name: "onvif-device-display-name".to_string(),
+            description: "".to_string(),
+            asset_endpoint_profile_uri: "onvif-endpoint-profile-uri".to_string(),
+            version: 0,
+            manufacturer: "".to_string(),
+            manufacturer_uri: "".to_string(),
+            model: "".to_string(),
+            product_code: "".to_string(),
+            hardware_revision: "".to_string(),
+            software_revision: "".to_string(),
+            documentation_uri: "".to_string(),
+            serial_number: "".to_string(),
+            attributes: HashMap::new(),
+            default_data_points_configuration: "".to_string(),
+            default_events_configuration: "".to_string(),
+            data_points,
+            events: Vec::new(),
+            status: Default::default(),
         };
 
-        match try_create_crontab(&crontab_spec, &device.id.to_lowercase(), namespace).await {
+        match try_create_asset(&asset_spec, &device.id.to_lowercase(), namespace).await {
             Ok(()) => DeviceChangeResponseBody {
                 result: "success".to_string(),
                 device: device.clone(),
@@ -346,6 +382,30 @@ async fn try_create_crontab(
     }
 }
 
+async fn try_create_asset(
+    asset_spec: &AssetSpec,
+    name: &str,
+    namespace: &str,
+) -> Result<(), anyhow::Error> {
+    let name = format!("onvif-asset-{}", generate_digest(name));
+    let api_client = kube::Client::try_default().await.unwrap();
+    match find_asset(&name, namespace, &api_client).await {
+        Ok(_asset_object) => {
+            // Asset already exists, do nothing
+            info!(
+                "try_create_asset - Asset {} already exists, do nothing",
+                name
+            );
+            Ok(())
+        }
+        Err(_) => {
+            // Asset does not exist
+            // TODO: distinguish the errors due to fail to connect to API server
+            create_asset(asset_spec, &name, namespace, &api_client).await
+        }
+    }
+}
+
 fn get_credential_for_onvif_device(device_id: &str) -> Option<(String, Option<String>)> {
     let extension_service_config_directory = std::env::var("ONVIF_SECRET_DIRECTORY");
     // If no env var, return None
@@ -388,6 +448,20 @@ fn get_credential_for_onvif_device(device_id: &str) -> Option<(String, Option<St
     };
     info!("password = {:?}", password);
     Some((username, password))
+}
+
+pub fn generate_digest(id_to_digest: &str) -> String {
+    let mut digest = String::new();
+    let mut hasher = VarBlake2b::new(4).unwrap();
+    hasher.update(id_to_digest);
+    hasher.finalize_variable(|var| {
+        digest = var
+            .iter()
+            .map(|num| format!("{:02x}", num))
+            .collect::<Vec<String>>()
+            .join("")
+    });
+    digest
 }
 
 async fn statusnotfoundwebservice(_req: Request<Body>) -> Result<Response<Body>, hyper::Error> {

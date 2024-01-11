@@ -1,3 +1,4 @@
+pub mod adrasset;
 pub mod crontab;
 pub mod restapihttpserver;
 

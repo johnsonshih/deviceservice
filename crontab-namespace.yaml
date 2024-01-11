@@ -12,3 +12,10 @@ metadata:
   name: newcr-with-instance
   labels:
     name: newcr-with-instance
+---
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: azure-iot-operations
+  labels:
+    name: azure-iot-operations
