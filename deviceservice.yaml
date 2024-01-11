@@ -11,6 +11,9 @@ rules:
 - apiGroups: ["stable.example.com"]
   resources: ["crontabs"]
   verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: ["deviceregistry.microsoft.com"]
+  resources: ["assets"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
 ---
 apiVersion: 'rbac.authorization.k8s.io/v1'
 kind: 'ClusterRoleBinding'
@@ -23,7 +26,7 @@ roleRef:
 subjects:
   - kind: 'ServiceAccount'
     name: 'deviceservice-sa'
-    namespace: default
+    namespace: azure-iot-operations
 ---
 apiVersion: apps/v1
 kind: Deployment
