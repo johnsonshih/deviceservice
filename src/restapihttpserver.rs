@@ -69,13 +69,19 @@ async fn handle_query_device_credential(protocol_name: &str, device_id: &str) ->
     info!("handle_query_device_credential: protocol_name={protocol_name}, device_id={device_id}");
     let query_body = match protocol_name {
         "debugEcho" => {
-            if device_id == "foo0" {
+            if device_id.contains("good") {
                 QueryDeviceCredentialResponseBody {
                     result: "success".to_string(),
                     credential_type: "username-password".to_string(),
                     credentials: HashMap::from([
-                        ("username".to_string(), "debugEchoUser1".to_string()),
-                        ("password".to_string(), "debugEchoPassword1".to_string()),
+                        (
+                            "username".to_string(),
+                            format!("{}-debugEchoUser", device_id),
+                        ),
+                        (
+                            "password".to_string(),
+                            format!("{}-debugEchoPassword", device_id),
+                        ),
                     ]),
                 }
             } else {
@@ -221,6 +227,7 @@ async fn handle_device_change(protocol_name: &str, reason: &str, device: &Device
     );
     let query_body = match protocol_name {
         "onvif" => handle_onvif_device_change(reason, device).await,
+        "debugEcho" => handle_debug_echo_device_change(reason, device).await,
         _ => DeviceChangeResponseBody {
             result: "fail".to_string(),
             ..Default::default()
@@ -265,7 +272,71 @@ async fn handle_onvif_device_change(reason: &str, device: &Device) -> DeviceChan
             status: Default::default(),
         };
 
-        match try_create_asset(&asset_spec, &device.id.to_lowercase(), namespace).await {
+        match try_create_asset("onvif", &asset_spec, &device.id.to_lowercase(), namespace).await {
+            Ok(()) => DeviceChangeResponseBody {
+                result: "success".to_string(),
+                device: device.clone(),
+            },
+            Err(_) => DeviceChangeResponseBody {
+                result: "fail".to_string(),
+                ..Default::default()
+            },
+        }
+    } else {
+        DeviceChangeResponseBody {
+            result: "fail".to_string(),
+            ..Default::default()
+        }
+    }
+}
+
+async fn handle_debug_echo_device_change(
+    reason: &str,
+    device: &Device,
+) -> DeviceChangeResponseBody {
+    if reason == "add" {
+        let namespace = "azure-iot-operations";
+        let data_point = DataPoint {
+            name: "data point name".to_string(),
+            data_source: "ns=3;s=FastUInt100".to_string(),
+            capability_id: "capability id".to_string(),
+            observability_mode: "none".to_string(),
+            data_point_configuration: "{}".to_string(),
+        };
+        let data_points = vec![data_point];
+        let asset_spec = AssetSpec {
+            uuid: "".to_string(),
+            asset_type: "".to_string(),
+            enabled: false,
+            external_asset_id: "".to_string(),
+            display_name: "debug-echo-device-display-name".to_string(),
+            description: "".to_string(),
+            asset_endpoint_profile_uri: "debug-echo-endpoint-profile-uri".to_string(),
+            version: 0,
+            manufacturer: "".to_string(),
+            manufacturer_uri: "".to_string(),
+            model: "".to_string(),
+            product_code: "".to_string(),
+            hardware_revision: "".to_string(),
+            software_revision: "".to_string(),
+            documentation_uri: "".to_string(),
+            serial_number: "".to_string(),
+            attributes: HashMap::new(),
+            default_data_points_configuration: "".to_string(),
+            default_events_configuration: "".to_string(),
+            data_points,
+            events: Vec::new(),
+            status: Default::default(),
+        };
+
+        match try_create_asset(
+            "debug-echo",
+            &asset_spec,
+            &device.id.to_lowercase(),
+            namespace,
+        )
+        .await
+        {
             Ok(()) => DeviceChangeResponseBody {
                 result: "success".to_string(),
                 device: device.clone(),
@@ -383,11 +454,12 @@ async fn try_create_crontab(
 }
 
 async fn try_create_asset(
+    protocol: &str,
     asset_spec: &AssetSpec,
     name: &str,
     namespace: &str,
 ) -> Result<(), anyhow::Error> {
-    let name = format!("onvif-asset-{}", generate_digest(name));
+    let name = format!("{}-asset-{}", protocol, generate_digest(name));
     let api_client = kube::Client::try_default().await.unwrap();
     match find_asset(&name, namespace, &api_client).await {
         Ok(_asset_object) => {

@@ -5,3 +5,5 @@ metadata:
 data:
   queryDeviceCredential.onvif: "http://deviceservice:8080/queryDeviceCredential"
   deviceChange.onvif: "http://deviceservice:8080/deviceChange"
+  queryDeviceCredential: "http://deviceservice:8080/queryDeviceCredential"
+  deviceChange: "http://deviceservice:8080/deviceChange"

@@ -1,0 +1,39 @@
+apiVersion: akri.sh/v0
+kind: Configuration
+metadata:
+  name: akri-debug-echo
+spec:
+  discoveryHandler:
+    name: debugEcho
+    discoveryDetails: |+
+        descriptions:
+        - "good0"
+        - "good1"
+        - "other"
+    discoveryProperties:
+    - name: query_device_url
+      value: "http://deviceservice:8080/queryDevice"
+  brokerSpec:
+    brokerPodSpec:
+      containers:
+      - name: akri-debug-echo-foo-broker
+        image: "nginx:latest"
+        resources:
+          limits:
+            "{{PLACEHOLDER}}" : "1"
+  instanceServiceSpec:
+    type: ClusterIP
+    ports:
+    - name: http
+      port: 6052
+      protocol: TCP
+      targetPort: 6052
+  configurationServiceSpec:
+    type: ClusterIP
+    ports:
+    - name: http
+      port: 6052
+      protocol: TCP
+      targetPort: 6052
+  brokerProperties: {}
+  capacity: 5
