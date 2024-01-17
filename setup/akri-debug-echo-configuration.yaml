@@ -10,9 +10,6 @@ spec:
         - "good0"
         - "good1"
         - "other"
-    discoveryProperties:
-    - name: query_device_url
-      value: "http://deviceservice:8080/queryDevice"
   brokerSpec:
     brokerPodSpec:
       containers:
