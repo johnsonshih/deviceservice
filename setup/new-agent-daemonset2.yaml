@@ -1,0 +1,128 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  annotations:
+    meta.helm.sh/release-name: akri
+    meta.helm.sh/release-namespace: azure-iot-operations
+  labels:
+    app.kubernetes.io/managed-by: Helm
+  name: aio-akri-agent-daemonset
+  namespace: azure-iot-operations
+spec:
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      name: aio-akri-agent
+  template:
+    metadata:
+      annotations:
+        prometheus.io/port: "8080"
+        prometheus.io/scrape: "true"
+      creationTimestamp: null
+      labels:
+        name: aio-akri-agent
+    spec:
+      containers:
+      - env:
+        - name: HOST_CRICTL_PATH
+          value: /usr/local/bin/crictl
+        - name: HOST_RUNTIME_ENDPOINT
+          value: unix:///host/run/containerd/containerd.sock
+        - name: HOST_IMAGE_ENDPOINT
+          value: unix:///host/run/containerd/containerd.sock
+        - name: AGENT_NODE_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: spec.nodeName
+        - name: DISCOVERY_HANDLERS_DIRECTORY
+          value: /var/lib/akri
+        - name: EXTENSION_SERVICE_CONFIG_DIRECTORY
+          value: /etc/akri-agent-extension-service-config
+        image: ghcr.io/johnsonshih/akri/agent:v0.12.12-20240111_215504
+        imagePullPolicy: IfNotPresent
+        name: aio-akri-agent
+        ports:
+        - containerPort: 8080
+          name: metrics
+          protocol: TCP
+        resources:
+          limits:
+            cpu: "1"
+            memory: 79Mi
+          requests:
+            cpu: 10m
+            memory: 11Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /var/lib/akri
+          name: discovery-handlers
+        - mountPath: /var/lib/kubelet/device-plugins
+          name: device-plugin
+        - mountPath: /host/run/containerd/containerd.sock
+          name: var-run-dockershim
+        - name: extension-service-config
+          mountPath: /etc/akri-agent-extension-service-config
+          readOnly: true
+      dnsPolicy: ClusterFirst
+      initContainers:
+      - args:
+        - MICROSOFT SOFTWARE LICENSE TERMS
+        - |2-
+
+          MICROSOFT Azure Arc-enabled Kubernetes
+        - |2-
+
+          This software is licensed to you as part of your or your company's subscription license for Microsoft Azure Services. You may only use the software with Microsoft Azure Services and subject to the terms and conditions of the agreement under which you obtained Microsoft Azure Services. If you do not have an active subscription license for Microsoft Azure Services, you may not use the software. Microsoft Azure Legal Information: https://azure.microsoft.com/en-us/support/legal/
+        command:
+        - echo
+        image: alpine:latest
+        imagePullPolicy: Always
+        name: aio-akri-eula
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      nodeSelector:
+        kubernetes.io/os: linux
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      serviceAccount: aio-akri-agent-sa
+      serviceAccountName: aio-akri-agent-sa
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - hostPath:
+          path: /var/lib/akri
+          type: ""
+        name: discovery-handlers
+      - hostPath:
+          path: /var/lib/kubelet/device-plugins
+          type: ""
+        name: device-plugin
+      - hostPath:
+          path: /run/containerd/containerd.sock
+          type: ""
+        name: var-run-dockershim
+      - name: extension-service-config
+        configMap:
+          name: akri-agent-extension-service-configs
+  updateStrategy:
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+    type: RollingUpdate
+status:
+  currentNumberScheduled: 1
+  desiredNumberScheduled: 1
+  numberAvailable: 1
+  numberMisscheduled: 0
+  numberReady: 1
+  observedGeneration: 1
+  updatedNumberScheduled: 1
+
