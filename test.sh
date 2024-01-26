@@ -7,3 +7,8 @@ curl -d '{"protocol":"onvif","data":{"reason":"add","device":{"id":"http://192.1
   -H 'Content-Type: application/json' \
   -X POST http://192.168.1.145:8080/deviceChange \
   &&printf "\n"
+
+
+  curl -d '{"Name":"Johnson"}' -H 'Content-Type: application/json' -X GET http://192.168.1.145:30081/deviceservice/api/v1/helloworld&&printf "\n"
+  curl -cert client.crt -key client.key -cacert ca.crt -d '{"Name":"Johnson"}' -H 'Content-Type: application/json' -X GET http://192.168.1.145:30081/deviceservice/api/v1/helloworld&&printf "\n"
+  openssl s_client -connect 192.168.1.145:30081/deviceservice/api/v1/helloworld -cert client.crt -key client.key -CAfile ca.crt
