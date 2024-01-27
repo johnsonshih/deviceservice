@@ -11,11 +11,11 @@ use log::{debug, error, info};
 use std::collections::HashMap;
 use std::net::SocketAddr;
 
-async fn gethelloworldwebservice(_req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
+async fn get_hello_world_webservice(_req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
     Ok(Response::new(Body::from("Hello World".to_string())))
 }
 
-async fn postquerydevicewebservice(req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
+async fn post_query_device_webservice(req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
     let whole_body_in_bytes = hyper::body::to_bytes(req.into_body()).await?;
     let body_string = std::str::from_utf8(&whole_body_in_bytes).unwrap();
     debug!("body_string: {body_string}");
@@ -536,27 +536,27 @@ pub fn generate_digest(id_to_digest: &str) -> String {
     digest
 }
 
-async fn statusnotfoundwebservice(_req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
+async fn status_not_found_webservice(_req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
     Ok(Response::builder()
         .status(StatusCode::NOT_FOUND)
         .body(Body::from(String::from("404 Not Found")))
         .unwrap())
 }
 
-async fn webservicerouter(req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
+async fn webservice_router(req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
     debug!("webservicerouter: req = {:?}", req);
     match (req.method(), req.uri().path()) {
-        (&Method::GET, "/api/v1/helloworld") => gethelloworldwebservice(req).await,
-        (&Method::POST, "/queryDevice") => postquerydevicewebservice(req).await,
+        (&Method::GET, "/api/v1/helloworld") => get_hello_world_webservice(req).await,
+        (&Method::POST, "/queryDevice") => post_query_device_webservice(req).await,
         (&Method::POST, "/queryDeviceCredential") => post_query_device_credential(req).await,
         (&Method::POST, "/deviceChange") => post_device_change(req).await,
-        _ => statusnotfoundwebservice(req).await,
+        _ => status_not_found_webservice(req).await,
     }
 }
 
 pub async fn httpserver(addr: SocketAddr) {
     let server_future = Server::bind(&addr).serve(make_service_fn(|_| async {
-        Ok::<_, hyper::Error>(service_fn(webservicerouter))
+        Ok::<_, hyper::Error>(service_fn(webservice_router))
     }));
     info!("deviceservice rest api http server is running");
     let r = server_future.await;
