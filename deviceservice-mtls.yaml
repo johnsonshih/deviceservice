@@ -1,13 +1,75 @@
 ---
-apiVersion: v1
-kind: Secret
+apiVersion: cert-manager.io/v1
+kind: Issuer
 metadata:
-  name: service-certs-secret
-type: Opaque
-data:
-  ca.crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUVxVENDQXhHZ0F3SUJBZ0lRTDgyVzRpbExKNGNzOHpNYmhKKzdhVEFOQmdrcWhraUc5dzBCQVFzRkFEQnQKTVI0d0hBWURWUVFLRXhWdGEyTmxjblFnWkdWMlpXeHZjRzFsYm5RZ1EwRXhJVEFmQmdOVkJBc01HSEp2WWtCegpiMjFpY21FdWVEVXlMbVJsZGlBb1VtOWlLVEVvTUNZR0ExVUVBd3dmYld0alpYSjBJSEp2WWtCemIyMWljbUV1CmVEVXlMbVJsZGlBb1VtOWlLVEFlRncweU1ERXdNalV4TnpJeU16bGFGdzB6TURFd01qVXhOakl5TXpsYU1HMHgKSGpBY0JnTlZCQW9URlcxclkyVnlkQ0JrWlhabGJHOXdiV1Z1ZENCRFFURWhNQjhHQTFVRUN3d1ljbTlpUUhOdgpiV0p5WVM1NE5USXVaR1YySUNoU2IySXBNU2d3SmdZRFZRUUREQjl0YTJObGNuUWdjbTlpUUhOdmJXSnlZUzU0Ck5USXVaR1YySUNoU2IySXBNSUlCb2pBTkJna3Foa2lHOXcwQkFRRUZBQU9DQVk4QU1JSUJpZ0tDQVlFQXE4TkEKNWxHWU5ZVXhDa25wRktRMTRSQkpsYkVnamNmSElpOGhwOVRvYnpVaWd5T1FvWjlXNTBXbUNoUnV1QU8vZlhJRwppOGlvZWpvdGVOUFZiSmo3Z2dNS3gxMzI1NmN2REtWUjc5Tktlb0hCU1lVVWpzMk55WlozelBVZVVlMHRYUEhSCko0Uk1XTG1wWUtkSTZOQ1lqRFg2b3VDSWVoNnNpblRPU1YrMGRibmZIdkZHRVNGcFVlaVVkc25DUm9yc2Evb0IKbitoSW41ZHZmdHV4U0RZRGJBRHNTTERxaHhZNHhzUUpLUDAwdU55c0xQMHZld0JxVFNVTE5lSE1OZjBZaHBpeQpvdC90YmNScVFBelN6Ukl2V2VDZ3cwR2NqcVBXMjcvcC94LzRTaDNYempUNncxeFZ0RjdabmlXMzdNNGdRa3ROCkhuTVdWZ2NlcW8wVGFDd28rQjM3WEphL2ZCUkgweDhIbk1kYTFKZVo3WDgvU3p5YzdZRWExTTZaa0tPTmVDRWcKQzcrOGpwL2FUTS8wRHV2SUloeEh3Sy85UEd2V1lERkpueTJKZjhwcTFqSjY2R3IwdVd4UkpIb2JmMmtCK2FGMwpLVXM1bks0OUt3K1RtWmNCK1NiVTI1NmUyd1BodXN4cXhYbllpOVdqZEl5Q3FGM0IxaFl4RWlhUmlGUlRBZ01CCkFBR2pSVEJETUE0R0ExVWREd0VCL3dRRUF3SUNCREFTQmdOVkhSTUJBZjhFQ0RBR0FRSC9BZ0VBTUIwR0ExVWQKRGdRV0JCUitsYVE3bVZpbEFuUGlpYWhWMVhPNjVtZWZ6VEFOQmdrcWhraUc5dzBCQVFzRkFBT0NBWUVBZTNBNQo1ejVKV0hTWEVjUUkvTHN0QVZKZmlsb2VoeWh2WWdjTnBJbWxzbTVBNDFWek1kMWlXZHBMWStXU0tXakhLRnMwCnU1SWQrc0dFWlJIQmljWUR0czBhekgzU2tsajBGck5ycFJkdmY4akp1TXZWQzFFb1VGaWpHK1YvUmRMMTRieHEKa3lwNWR0eFZjdnR2VUxUK0lENXZTVllCd0dPQnAzNkZnNVFzNFFPdVNQa1ZHd2phRWRKdnpxYjFYRExuY3N2ZQphcDZBTHp3T1hVc044SWNycTQvR2xWRFgxMXJPbmZXaE5RUmlXS0p0aW40dnp4TDAwMnJQV3dTc2VrY3VMRUZRCk5DQllhQkJEbHA0ZkxoMlhWdUI3eHZLWFRQbThLOWhJeHJUQkVoOGtqOHA1cDk1RE9UV3BMZ1h1QmNkWG1ORFYKLzROQnpzV3d1TzNJNy9pbEhiSCtnRXNNMzkwcDA1NkJtdjJjRjBiV2IreFQydnlOeW1obVNDbjc3UUVtY3NPRgpMRHFzakRjN0pzUUdVVklBZ3RNNTBtZC9RdmFYeFRWb0FNWHRTV2V5SzhRc0Myc3lacVdsWGlZa3J3WWpwK0tJCjZqWDRFcEx3S2RRT3paZGpnbkladkc5NG81bFI4Y1B5WmxhVUtWdW5PVHZBWGlUM0FXZUJwcENrNlNFSAotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
-  server.crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUVTakNDQXJLZ0F3SUJBZ0lSQUtOVEhkV3NyS0tDcEt0MTlDL3NJNFV3RFFZSktvWklodmNOQVFFTEJRQXcKYlRFZU1Cd0dBMVVFQ2hNVmJXdGpaWEowSUdSbGRtVnNiM0J0Wlc1MElFTkJNU0V3SHdZRFZRUUxEQmh5YjJKQQpjMjl0WW5KaExuZzFNaTVrWlhZZ0tGSnZZaWt4S0RBbUJnTlZCQU1NSDIxclkyVnlkQ0J5YjJKQWMyOXRZbkpoCkxuZzFNaTVrWlhZZ0tGSnZZaWt3SGhjTk1Ua3dOakF4TURBd01EQXdXaGNOTXpBeE1ESTFNVGN6T0RNNFdqQk0KTVNjd0pRWURWUVFLRXg1dGEyTmxjblFnWkdWMlpXeHZjRzFsYm5RZ1kyVnlkR2xtYVdOaGRHVXhJVEFmQmdOVgpCQXNNR0hKdllrQnpiMjFpY21FdWVEVXlMbVJsZGlBb1VtOWlLVENDQVNJd0RRWUpLb1pJaHZjTkFRRUJCUUFECmdnRVBBRENDQVFvQ2dnRUJBTkR2MG9SdXBBR3RBbDlaWlRlVHdkVG9ZaC9HdGFqM2JBeWhRUXorZFE1R3pMUzMKK1p2bzNkYWVwd25vTkFCb3h1UHdwdGIvako2RWM4cmR2VWlKa0tiK2pBdVowdlN1RXFQVGNndmJucXNWKzdVVAo4V2xlQ1VuT0lZNkZCK3VUYUxFcHR1NWsrUGY3aTNtMVJxVzFnUlZsWWNIc0x1djNOQlFXMGJ6K1hVWnZjaXJXCktWQ3h6MmV4MmFGeldYckFaRXVPd01YK3grV2ljZDR0UmZjaW80bU9JK2pDUkNzYndXMFRzeVdTdHJpbWNibDAKbGRiUmk4RGVBRGYzVlBRQ01ZbWNKQVJZc1RmUndLNzVPRk1nbUQwR1RpOFdVUldRQ2JUSm53em9wN0ZhbW5vMAovSS9FZjY1RG5nbGViNkh3RzkxRXRFVlU3UUhxU1hsVUs0MUF1OWtDQXdFQUFhT0JoVENCZ2pBT0JnTlZIUThCCkFmOEVCQU1DQmFBd0V3WURWUjBsQkF3d0NnWUlLd1lCQlFVSEF3RXdEQVlEVlIwVEFRSC9CQUl3QURBZkJnTlYKSFNNRUdEQVdnQlIrbGFRN21WaWxBblBpaWFoVjFYTzY1bWVmelRBc0JnTlZIUkVFSlRBamdnbHNiMk5oYkdodgpjM1NIQkg4QUFBR0hFQUFBQUFBQUFBQUFBQUFBQUFBQUFBRXdEUVlKS29aSWh2Y05BUUVMQlFBRGdnR0JBSkowCjdvRGtWbWRCL1AwUFgwdkluK0NQbWlFOElyTzhzdEl0T0dsVlJ5OVREV0ZSZE1wWTEzQk9qbE5ZMmVmTlUyVHoKb3IrbHlmVjdEOFBpQ2s1cTNlOHNMdE9sSUFUMzJJUklyR1hsNUU0cTd6RG5PY2tRalpJVVp3U0ZBRlZ5Z3k0RgpyUGdKQ1M5dXF6OXZ6MDg2U3lSRDBrclRNNXU5eU1BdkcydUpMRWs1b2FWV0FLZERScGxTdG1NeDdRUUhNWjRHCmlOWU1EcGo0ZFU0Z2tydlplQytKS3dqYlNKM2hqZThDWkNBMWF0enovNVdXRXQyRDhZZjl0dzI3VC9oaW5yTWkKcnJqUHBFY0E2Qzh3dkh4cVlwaXB0UUMxRkY1dmFVeVJxakYraXJIZ1FkTlVDRTBuSlN3QXNJRFcwVERpVkdERApPSktzNkVZdXpKOE9jV3c2SUZ4OFlOdmR4WkpTcjhTYWF2ckg3Nm15SGllVGtxaFd2alNRRVJVdzcxaVV3ZTBxCjVOZXYrSjJOOVU3b1pCVENJc0QvcUtPUVREOW1SakpwWUxuWE5xRXlKaHpSZ0NBNStUUUlYYlRhMTBlbzlTdmcKQ1RrcXhzaXhtZFRLRDhaSWxVUGhMSTllaHIwU3BidCsyWGgzeUF0bFNyZkF0NXAyaGdWQ294YWxFd1dwd0E9PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
-  server.key: LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JSUV2QUlCQURBTkJna3Foa2lHOXcwQkFRRUZBQVNDQktZd2dnU2lBZ0VBQW9JQkFRRFE3OUtFYnFRQnJRSmYKV1dVM2s4SFU2R0lmeHJXbzkyd01vVUVNL25VT1JzeTB0L21iNk4zV25xY0o2RFFBYU1iajhLYlcvNHllaEhQSwozYjFJaVpDbS9vd0xtZEwwcmhLajAzSUwyNTZyRmZ1MUUvRnBYZ2xKemlHT2hRZnJrMml4S2JidVpQajMrNHQ1CnRVYWx0WUVWWldIQjdDN3I5elFVRnRHOC9sMUdiM0lxMWlsUXNjOW5zZG1oYzFsNndHUkxqc0RGL3NmbG9uSGUKTFVYM0lxT0pqaVBvd2tRckc4RnRFN01sa3JhNHBuRzVkSlhXMFl2QTNnQTM5MVQwQWpHSm5DUUVXTEUzMGNDdQorVGhUSUpnOUJrNHZGbEVWa0FtMHlaOE02S2V4V3BwNk5QeVB4SCt1UTU0SlhtK2g4QnZkUkxSRlZPMEI2a2w1ClZDdU5RTHZaQWdNQkFBRUNnZ0VBWjhQelpWb2RrY2QrdWlRSHBNWjVLV2dQODRBWWtFWHhINFNtYmZHaDZPazQKbVRnVmUxejNiN056ZWZRY2YyZUovNEp4R2EzcEJJRDdrUEQzSktOTmQrSkxZeWVPSVg2aU8wSzBEVGVSWVo2VgpWNlVEN0RTTG9HQURRbWpIT2pRSGRwVWxDTmlVM1hQTUhUSHVXRFlBV2NQei9QOXpmalZUWS9iQlMzOTRpNVcvCm5GTEhNRUdELzlLRVRVbTJXZG11Kzg0ZmhBZytnU2JET0hLT21ycWlSb1NtQkluZlVFalRMMjJnVTFoUGtqV1kKMTdpOXZlTUdWUFFlQTg5WFltRmF2Z1dJTUh3aU9EMEZvbTJ5MjZPSURXRFhBSmY3b09vT05FbFdGMk9qaVNBYQo3SUhsOEVFRC9hREl0OVh5djhKOXFYemtBdExQWE84dkZHMlVxMC9CUVFLQmdRRDFNbENzbk1WZjNkY2s4eWc2Cll3RmtGSFp4bkZCekJQd3VEb01EMk9CSVpjcndjQmhVUW8wdThNME5vaGdqdkJCN1hVclcrLzV1Y0Y5QmFlY0MKM1J6L0p3UGs3b1BhZllWYkVGR3YrQ2VHSkZLTC9scTdOd0Y2Mk43RVlvM04yaWpZakdZaVpGbXhnT1ZFZnpTZApXUlNIK2I2UTkyM2xFcFdvRmFlRnd3KzVIUUtCZ1FEYUpJUlRyMXN0WFhGWFZqL0VUSkc0dVQzSTdxbGZSN3pwCi90L1lIWDZRblY1ZEZkQkNFWFNXNDFZb3F2VW4xMk94MjhudlFNREZXVmtRR2ZBRUxZcWtmL296QlE5ZDZlZTgKM2JVOVYxNFlXYUdTSzFSVDgzY2dXVXREblVqdEx1azlNRys1eDNFUWNmcTVuZzZ1ZCtIcjh1dCtnejBQYkxjSwpnUjN1VFFrTTdRS0JnRU5VU2FyY2NhWmRlRktCSXE3RnVRQU9UbWZzRUh0RkJ5cHVlYk40dmoyakZoTG45UVpPCk1BNlB1UDdoWDllUU1NWnZXN21sQUx5NnhxMWpzemVxRitoSWdsMCswWjRSa2FqcjFrS0gxZktUenNiNlZWZkwKUnZEQTFJc0F0UWV0dkVHYWJBRk5wUU9FN1cvZHJrajJ5Umg5ajhLbTd0cFVQQndudGhTWTk1eFJBb0dBTDV1dQpvWkR3eGpyUmhLMFhKNkZLWUZWVlRhZ0FvUUhJRWcyRkR1YUkrOGpNa21ZeldHZjAyUVZ1aFZ1aU8zcS9rRTZXCmlMZktHb2dBYndvcUhzOU5wYzhrYk1RYThYVWVGVk1SdmZ4MlZid2lEZ09VMk9tV3d5R1owbnplTUoxL1c5SloKWCtOT0lyZXRiNXMyT3crQTUvelJOb0F2OEZEYXRka3VEaGNUOVpVQ2dZQnRFSTlwbVdZWHhHZmFWUUVySmNzUwozYThQVTg3NXNFMDZEaUVjdm9vbGpjTHA2ZENtR29jUlFPR3BTWGZ5M3pqWDRGL0haakRLK0dLUGcyYkNpcktyCm5SUFdmMHQzRFNlU3lESU5qK2EwZmc0S3ZZUjRGY29jSkR6VEZKaC85Q3J0Tmt0cXdIQXFyUVVTb2tCYlc4bjYKS2ovQVlMV09JWEFUZkNyT2dkb0FBZz09Ci0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS0K
+  name: bootstrap-issuer
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: root-certificate
+spec:
+  isCA: true
+  secretName: root-certificate
+  commonName: "Root Certificate"
+  privateKey:
+    algorithm: RSA
+    size: 4096
+    encoding: PKCS8
+  issuerRef:
+    name: bootstrap-issuer
+    kind: Issuer
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: root-issuer
+spec:
+  ca:
+    secretName: root-certificate
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: deviceservice-server-certificate
+spec:
+  secretName: deviceservice-server-certificate
+  privateKey:
+    algorithm: RSA
+    encoding: PKCS8
+    size: 4096
+  commonName: "deviceservice server"
+  usages:
+    - server auth
+    - key encipherment
+    - digital signature
+  dnsNames:
+  - deviceservice.azure-iot-operations
+  - deviceservice.azure-iot-operations.svc
+  issuerRef:
+    name: root-issuer
+    kind: Issuer
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: deviceservice-client-certificate
+spec:
+  secretName: deviceservice-client-certificate
+  privateKey:
+    algorithm: RSA
+    encoding: PKCS8
+    size: 4096
+  commonName: "deviceservice client"
+  usages:
+    - client auth
+    - key encipherment
+    - digital signature
+  issuerRef:
+    name: root-issuer
+    kind: Issuer
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -21,11 +83,11 @@ data:
         server_name     chainz.com www.chainz.com;
 
         # server certificate
-        ssl_certificate     /etc/nginx/certs/server.crt;
-        ssl_certificate_key /etc/nginx/certs/server.key;
+        ssl_certificate     /etc/nginx/servercerts/tls.crt;
+        ssl_certificate_key /etc/nginx/servercerts/tls.key;
 
         # CA certificate
-        ssl_client_certificate /etc/nginx/certs/ca.crt;
+        ssl_client_certificate /etc/nginx/clientcerts/ca.crt;
 
         # need to validate client certificate(if this flag optional it won't
         # validate client certificates)
@@ -109,8 +171,10 @@ spec:
         volumeMounts:
         - name: nginx-config-d
           mountPath: /etc/nginx/conf.d
-        - name: nginx-service-certs
-          mountPath: /etc/nginx/certs
+        - name: server-certs
+          mountPath: /etc/nginx/servercerts
+        - name: client-certs
+          mountPath: /etc/nginx/clientcerts
       - image: ghcr.io/johnsonshih/deviceservice:latest
         imagePullPolicy: Always
         name: deviceservice
@@ -134,9 +198,12 @@ spec:
       - name: nginx-config-d
         configMap:
           name: nginx-config-d
-      - name: nginx-service-certs
+      - name: server-certs
         secret:
-          secretName: service-certs-secret
+          secretName: deviceservice-server-certificate
+      - name: client-certs
+        secret:
+          secretName: deviceservice-server-certificate
       - name: secret-volume
         secret:
           secretName: onvif-auth-secret
