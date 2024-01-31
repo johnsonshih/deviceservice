@@ -75,3 +75,18 @@ spec:
         - name: secret-volume
           secret:
             secretName: onvif-auth-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: deviceservice
+  name: deviceservice
+spec:
+  type: NodePort
+  selector:
+    app: deviceservice
+  ports:
+  - port: 8080
+    protocol: TCP
+    targetPort: 8080
