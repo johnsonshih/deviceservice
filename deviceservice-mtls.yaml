@@ -53,6 +53,37 @@ spec:
     kind: Issuer
 ---
 apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: client-bootstrap-issuer
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: client-root-certificate
+spec:
+  isCA: true
+  secretName: client-root-certificate
+  commonName: "Client Root Certificate"
+  privateKey:
+    algorithm: RSA
+    size: 4096
+    encoding: PKCS8
+  issuerRef:
+    name: client-bootstrap-issuer
+    kind: Issuer
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: client-root-issuer
+spec:
+  ca:
+    secretName: client-root-certificate
+---
+apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: deviceservice-client-certificate
@@ -68,7 +99,7 @@ spec:
     - key encipherment
     - digital signature
   issuerRef:
-    name: root-issuer
+    name: client-root-issuer
     kind: Issuer
 ---
 apiVersion: v1
@@ -203,7 +234,7 @@ spec:
           secretName: deviceservice-server-certificate
       - name: client-certs
         secret:
-          secretName: deviceservice-server-certificate
+          secretName: deviceservice-client-certificate
       - name: secret-volume
         secret:
           secretName: onvif-auth-secret
