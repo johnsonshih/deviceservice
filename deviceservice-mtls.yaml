@@ -46,6 +46,7 @@ spec:
     - key encipherment
     - digital signature
   dnsNames:
+  - deviceservice
   - deviceservice.azure-iot-operations
   - deviceservice.azure-iot-operations.svc
   issuerRef:
@@ -111,7 +112,7 @@ data:
     server {
         listen 8443;
         ssl on;
-        server_name     chainz.com www.chainz.com;
+        server_name     deviceservice.azure-iot-operations deviceservice.azure-iot-operations.svc;
 
         # server certificate
         ssl_certificate     /etc/nginx/servercerts/tls.crt;
@@ -246,7 +247,6 @@ metadata:
     app: deviceservice
   name: deviceservice
 spec:
-  type: NodePort
   selector:
     app: deviceservice
   ports:

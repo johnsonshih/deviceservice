@@ -3,7 +3,7 @@ kind: ConfigMap
 metadata:
   name: akri-agent-extension-service-configs
 data:
-  queryDeviceCredential.onvif: "https://deviceservice:443/queryDeviceCredential"
-  deviceChange.onvif: "https://deviceservice:443/deviceChange"
+  queryDeviceCredential.onvif: "https://deviceservice.azure-iot-operations.svc:443/queryDeviceCredential"
+  deviceChange.onvif: "https://deviceservice.azure-iot-operations.svc:443/deviceChange"
   queryDeviceCredential: "https://deviceservice:443/queryDeviceCredential"
   deviceChange: "https://deviceservice:443/deviceChange"
